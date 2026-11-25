@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KaamConnect</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#172033}
+header{background:linear-gradient(135deg,#0759c7,#073579);color:white;padding:25px 18px;border-radius:0 0 24px 24px}
+header h1{margin:0;font-size:27px}
+header p{margin:8px 0 0;color:#d9e8ff}
+.container{padding:16px;max-width:600px;margin:auto}
+.search{width:100%;padding:14px;border:1px solid #ddd;border-radius:12px;font-size:16px;background:white}
+.buttons{display:flex;gap:10px;margin:15px 0}
+button{border:0;border-radius:10px;padding:12px;background:#0759c7;color:white;font-weight:bold;cursor:pointer}
+.buttons button{flex:1}
+.card{background:white;padding:16px;border-radius:15px;margin:12px 0;box-shadow:0 3px 12px #00000008}
+.card h3{margin:0 0 8px}
+.small{color:#65728a;font-size:14px}
+.tag{display:inline-block;background:#e9f2ff;color:#0759c7;padding:5px 9px;border-radius:20px;font-size:12px}
+input,select,textarea{width:100%;padding:12px;margin:7px 0;border:1px solid #d9deea;border-radius:10px;font-size:15px}
+label{font-size:14px;font-weight:bold}
+.form button{width:100%;margin-top:8px}
+h2{font-size:20px}
+footer{text-align:center;color:#758096;padding:25px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>🔵 KaamConnect</h1>
+<p>काम खोजें • काम दें • आगे बढ़ें</p>
+</header>
+
+<div class="container">
+
+<input class="search" id="search" placeholder="🔍 काम या जगह खोजें..." oninput="showJobs()">
+
+<div class="buttons">
+<button onclick="showSection('jobs')">काम खोजें</button>
+<button onclick="showSection('post')">+ काम पोस्ट करें</button>
+</div>
+
+<div id="jobs">
+<h2>📢 उपलब्ध काम</h2>
+<div id="jobList"></div>
+</div>
+
+<div id="post" style="display:none">
+<div class="card form">
+<h2>नया काम पोस्ट करें</h2>
+
+<label>काम का नाम</label>
+<input id="title" placeholder="जैसे: इलेक्ट्रिशियन चाहिए">
+
+<label>जगह</label>
+<input id="place" placeholder="गाँव या शहर का नाम">
+
+<label>मजदूरी / वेतन</label>
+<input id="salary" placeholder="जैसे ₹500 प्रति दिन">
+
+<label>मोबाइल नंबर</label>
+<input id="phone" placeholder="10 अंकों का नंबर" type="tel">
+
+<label>काम की जानकारी</label>
+<textarea id="desc" placeholder="काम की पूरी जानकारी"></textarea>
+
+<button onclick="addJob()">काम पोस्ट करें</button>
+</div>
+</div>
+
+</div>
+
+<footer>KaamConnect © 2026<br>आपका काम, आपकी पहचान</footer>
+
+<script>
+let jobs = JSON.parse(localStorage.getItem("kaamconnect_jobs") || "[]");
+
+function showSection(section){
+document.getElementById("jobs").style.display=section==="jobs"?"block":"none";
+document.getElementById("post").style.display=section==="post"?"block":"none";
+if(section==="jobs")showJobs();
+}
+
+function showJobs(){
+let search=document.getElementById("search").value.toLowerCase();
+let list=document.getElementById("jobList");
+list.innerHTML="";
+let filtered=jobs.filter(j=>(j.title+" "+j.place+" "+j.desc).toLowerCase().includes(search));
+if(filtered.length===0){
+list.innerHTML='<div class="card">अभी कोई काम पोस्ट नहीं हुआ है। आप पहला काम पोस्ट कर सकते हैं।</div>';
+return;
+}
+filtered.slice().reverse().forEach(j=>{
+list.innerHTML+=`
+<div class="card">
+<span class="tag">काम उपलब्ध</span>
+<h3>${escapeHTML(j.title)}</h3>
+<p>📍 ${escapeHTML(j.place)}</p>
+<p>💰 ${escapeHTML(j.salary)}</p>
+<p class="small">${escapeHTML(j.desc)}</p>
+<a href="https://wa.me/91${encodeURIComponent(j.phone)}?text=${encodeURIComponent("नमस्ते, मुझे आपके काम के बारे में जानकारी चाहिए: "+j.title)}">
+<button>WhatsApp से संपर्क करें</button>
+</a>
+</div>`;
+});
+}
+
+function escapeHTML(s){
+return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+function addJob(){
+let title=document.getElementById("title").value.trim();
+let place=document.getElementById("place").value.trim();
+let salary=document.getElementById("salary").value.trim();
+let phone=document.getElementById("phone").value.trim();
+let desc=document.getElementById("desc").value.trim();
+
+if(!title||!place||!salary||!phone){
+alert("कृपया सभी जरूरी जानकारी भरें।");
+return;
+}
+if(!/^[0-9]{10}$/.test(phone)){
+alert("कृपया 10 अंकों का सही मोबाइल नंबर डालें।");
+return;
+}
+jobs.push({title,place,salary,phone,desc});
+localStorage.setItem("kaamconnect_jobs",JSON.stringify(jobs));
+alert("आपका काम पोस्ट हो गया!");
+document.getElementById("title").value="";
+document.getElementById("place").value="";
+document.getElementById("salary").value="";
+document.getElementById("phone").value="";
+document.getElementById("desc").value="";
+showSection("jobs");
+}
+
+showJobs();
+</script>
+</body>
+</html>
